@@ -40,7 +40,7 @@
             android:layout_height="400dp"
            android:rowCount="8"
             android:columnCount="8"
-            android:rotationY="180"/>
+            android:rotationX="180"/>
     </FrameLayout>
 
     <androidx.constraintlayout.widget.Guideline

@@ -5,9 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -24,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout vGameBoard;
     private GameDTO gameDTO;
     private FrameLayout point[][];
+    private RotateAnimation rotate;
 
     public MainActivity() {
     }
@@ -43,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         initGame();
         printGameBoard();
         printStones();
+        initStonesListener();
 
        /*for(int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -91,16 +90,15 @@ public class MainActivity extends AppCompatActivity {
         }*/
     }
 
+    private void initStonesListener() {
+        int a = point[0][0].getId();
+        int b = point[1][0].getId();
+        int c = endButton.getId();
+        FrameLayout i = (FrameLayout) point[0][0].getRootView();
+        int j = i.getId();
+    }
+
     private void initButtons() {
-        endButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                RotateAnimation rotate = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                rotate.setDuration(1000);
-                rotate.setInterpolator(new LinearInterpolator());
-               vBoard.startAnimation(rotate);
-            }
-        });
     }
 
     private void printStones() {
@@ -137,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void printGameBoard() {
+        if(!gameDTO.isGameOwner()){
+            vBoard.setRotation(180);
+        }
         for(int i = 0; i < 8; i++){
             for(int j = 0; j < 8; j++) {
                 point[i][j] = new FrameLayout(vGameBoard.getContext());

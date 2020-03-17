@@ -4,12 +4,14 @@ public class GameDTO {
 
     PlayerEnum currentPlayer;
     boolean status;
+    boolean gameOwner;
     StoneEnum gameBoard[][];
     StoneEnum oldGameBoard[][];
 
     public GameDTO(){
         currentPlayer = PlayerEnum.WHITE;
         status = true;
+        gameOwner = true;
         gameBoard = new StoneEnum[][]{
                 {StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER, null},
                 {null, StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER, null, StoneEnum.WHITE_SOLIDER},
@@ -53,5 +55,13 @@ public class GameDTO {
 
     public void setOldGameBoard(StoneEnum[][] oldGameBoard) {
         this.oldGameBoard = oldGameBoard;
+    }
+
+    public boolean isGameOwner() {
+        return gameOwner;
+    }
+
+    public void setGameOwner(boolean gameOwner) {
+        this.gameOwner = gameOwner;
     }
 }
