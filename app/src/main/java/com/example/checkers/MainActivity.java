@@ -1,11 +1,15 @@
 package com.example.checkers;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -15,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int pointWidth;
     private int stonePadding;
+    private Button endButton;
     private FrameLayout vBoard;
     private GridLayout vGameBoard;
     private GameDTO gameDTO;
@@ -28,11 +33,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        endButton = findViewById(R.id.end);
         vBoard = findViewById(R.id.board);
         vGameBoard = findViewById(R.id.gameBoard);
         pointWidth = 50; // in dp
         stonePadding = 10; // in dp
 
+        initButtons();
         initGame();
         printGameBoard();
         printStones();
@@ -82,6 +89,18 @@ public class MainActivity extends AppCompatActivity {
                 vGameBoard.addView(point);
             }
         }*/
+    }
+
+    private void initButtons() {
+        endButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RotateAnimation rotate = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotate.setDuration(1000);
+                rotate.setInterpolator(new LinearInterpolator());
+               vBoard.startAnimation(rotate);
+            }
+        });
     }
 
     private void printStones() {
