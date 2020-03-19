@@ -1,10 +1,15 @@
 package com.example.checkers;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ClipData;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.DragEvent;
+import android.view.View;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -21,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout vGameBoard;
     private GameDTO gameDTO;
     private FrameLayout point[][];
-    private RotateAnimation rotate;
 
     public MainActivity() {
     }
@@ -41,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         initGame();
         printGameBoard();
         printStones();
-        initStonesListener();
 
        /*for(int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -90,14 +93,6 @@ public class MainActivity extends AppCompatActivity {
         }*/
     }
 
-    private void initStonesListener() {
-        int a = point[0][0].getId();
-        int b = point[1][0].getId();
-        int c = endButton.getId();
-        FrameLayout i = (FrameLayout) point[0][0].getRootView();
-        int j = i.getId();
-    }
-
     private void initButtons() {
     }
 
@@ -123,11 +118,27 @@ public class MainActivity extends AppCompatActivity {
                         default:
                             break;
                     }
+                    initDragListener(solider);
                     point[i][j].addView(solider);
                 }
             }
         }
     }
+
+    private void initDragListener(ImageView solider) {
+        solider.setOnLongClickListener(new View.OnLongClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public boolean onLongClick(View v) {
+                String tag = (String)v.getTag();
+                ClipData clipData = ClipData.newPlainText("", tag);
+                View.DragShadowBuilder dragShadowBuilder = new View.DragShadowBuilder(v);
+                v.startDragAndDrop(clipData, dragShadowBuilder, v, 0);
+                return false;
+            }
+        });
+    }
+
 
     private void initGame() {
         gameDTO = new GameDTO();
@@ -149,10 +160,40 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     point[i][j].setBackgroundColor(Color.WHITE);
                 }
+                initDropListener(point[i][j]);
                 vGameBoard.addView( point[i][j]);
             }
         }
 
+    }
+
+    private void initDropListener(FrameLayout frameLayout) {
+        frameLayout.setOnDragListener(new View.OnDragListener() {
+            @Override
+            public boolean onDrag(View v, DragEvent event) {
+                switch (event.getAction()){
+                    case DragEvent.ACTION_DRAG_STARTED:
+                    case DragEvent.ACTION_DRAG_ENTERED:
+                    case DragEvent.ACTION_DRAG_LOCATION:
+                    case DragEvent.ACTION_DRAG_ENDED:
+                        break;
+                    case DragEvent.ACTION_DRAG_EXITED:
+                        ImageView stone1 = (ImageView) event.getLocalState();
+                        FrameLayout from = (FrameLayout) stone1.getParent();
+                        if(from != null){
+                            from.removeView(stone1);
+                        }
+                        break;
+                    case DragEvent.ACTION_DROP:
+                        ImageView stone2 = (ImageView) event.getLocalState();
+                        FrameLayout to = (FrameLayout) v;
+                        to.addView(stone2);
+                    default:
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
     public static int dpToPx(int dp) {
