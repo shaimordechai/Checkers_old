@@ -1,13 +1,10 @@
 package com.example.checkers;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.ClipData;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.DragEvent;
 import android.view.View;
@@ -17,16 +14,15 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.Map;
-
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int BOARD_HIGH = 8;
-    private static final int BOARD_WIDTH = 8;
+    private static final int BOARD_HIGH = 8; //points
+    private static final int BOARD_WIDTH = 8; //points
+    private static final int POINT_HIGH = 50; //dp
+    private static final int POINT_WIDTH = 50; //dp
+    private static final int STONE_PADDING = 10; //dp
 
-    private int pointWidth;
-    private int stonePadding;
     private Button endButton;
     private Button refreshButton;
     private TextView vPlayerName;
@@ -46,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public MainActivity() {
-        pointWidth = 50; // in dp
-        stonePadding = 10; // in dp
     }
 
     @Override
@@ -55,16 +49,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initViews();
+        initGame();
+        initButtons();
+        printGameBoard();
+        printStones();
+        initDragListener();
+        initDropListener();
+    }
+
+    private void initViews() {
         refreshButton = findViewById(R.id.refresh);
         endButton = findViewById(R.id.end);
         vPlayerName =  findViewById(R.id.playerName);
         vBoard = findViewById(R.id.board);
         vGameBoard = findViewById(R.id.gameBoard);
-
-        initButtons();
-        initGame();
-        printGameBoard();
-        printStones();
     }
 
     private void initButtons() {
@@ -90,48 +89,53 @@ public class MainActivity extends AppCompatActivity {
         StoneEnum[][] board = gameDTO.getOldGameBoard();
         for(int i = 0; i < BOARD_HIGH; i++){
             for(int j = 0; j < BOARD_WIDTH; j++) {
-                StoneEnum currentPoint = board[i][j];
-                if(currentPoint == null){
-                    points[i][j].removeAllViews();
-                    continue;
-                }
-                if (currentPoint != null) {
-                    ImageView solider = new ImageView(points[i][j].getContext());
-                    switch (currentPoint) {
-                        case BLACK_SOLIDER:
-                            solider.setImageResource(R.drawable.black_solider);
-                            break;
-                        case WHITE_SOLIDER:
-                            solider.setImageResource(R.drawable.white_solider);
-                            initDragListener(solider);
-                            break;
-                        case BLACK_KING:
+                switch (board[i][j]){
+                    case WHITE_SOLIDER:
+                        whiteSoliders[i][j].setVisibility(View.VISIBLE);
+                        blackSoliders[i][j].setVisibility(View.GONE);
+                        whiteKings[i][j].setVisibility(View.GONE);
+                        blackKings[i][j].setVisibility(View.GONE);
+                        break;
+                    case BLACK_SOLIDER:
+                        whiteSoliders[i][j].setVisibility(View.GONE);
+                        blackSoliders[i][j].setVisibility(View.VISIBLE);
+                        whiteKings[i][j].setVisibility(View.GONE);
+                        blackKings[i][j].setVisibility(View.GONE);
+                        break;
+                    case WHITE_KING:
+                        whiteSoliders[i][j].setVisibility(View.GONE);
+                        blackSoliders[i][j].setVisibility(View.GONE);
+                        whiteKings[i][j].setVisibility(View.VISIBLE);
+                        blackKings[i][j].setVisibility(View.GONE);
+                        break;
+                    case BLACK_KING:
+                        whiteSoliders[i][j].setVisibility(View.GONE);
+                        blackSoliders[i][j].setVisibility(View.GONE);
+                        whiteKings[i][j].setVisibility(View.GONE);
+                        blackKings[i][j].setVisibility(View.VISIBLE);
+                        break;
+                    default:
+                        whiteSoliders[i][j].setVisibility(View.GONE);
+                        blackSoliders[i][j].setVisibility(View.GONE);
+                        whiteKings[i][j].setVisibility(View.GONE);
+                        blackKings[i][j].setVisibility(View.GONE);
+                        break;
 
-                            break;
-                        case WHITE_KING:
-
-                            break;
-                        default:
-                            break;
-                    }
-                    points[i][j].addView(solider);
                 }
+
             }
         }
     }
 
-    private void initDragListener(ImageView solider) {
-        solider.setOnLongClickListener(new View.OnLongClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public boolean onLongClick(View v) {
-                String tag = (String)v.getTag();
-                ClipData clipData = ClipData.newPlainText("", tag);
-                View.DragShadowBuilder dragShadowBuilder = new View.DragShadowBuilder(v);
-                v.startDragAndDrop(clipData, dragShadowBuilder, v, 0);
-                return false;
+    private void initDragListener() {
+        for(int i = 0; i < BOARD_HIGH; i++){
+            for(int j = 0; j < BOARD_WIDTH; j++) {
+                whiteSoliders[i][j].setOnLongClickListener(new DragListener());
+                blackSoliders[i][j].setOnLongClickListener(new DragListener());
+                whiteKings[i][j].setOnLongClickListener(new DragListener());
+                blackKings[i][j].setOnLongClickListener(new DragListener());
             }
-        });
+        }
     }
 
 
@@ -145,14 +149,26 @@ public class MainActivity extends AppCompatActivity {
 
         for(int i = 0; i < BOARD_HIGH; i++){
             for(int j = 0; j < BOARD_WIDTH; j++) {
+                Point point = new Point(j, i);
                 points[i][j] = new PointOnBoard(vGameBoard.getContext());
-                points[i][j].setPoint(new Point(j, i));
-                points[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(50), dpToPx(50));
+                points[i][j].setPoint(point);
+                points[i][j].setPadding(dpToPx(STONE_PADDING), dpToPx(STONE_PADDING), dpToPx(STONE_PADDING), dpToPx(STONE_PADDING));
+                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(POINT_WIDTH), dpToPx(POINT_HIGH));
                 points[i][j].setLayoutParams(lp);
 
                 whiteSoliders[i][j] = new ImageView(points[i][j].getContext());
                 whiteSoliders[i][j].setImageResource(R.drawable.white_solider);
+                whiteSoliders[i][j].setVisibility(View.GONE);
+
+                blackSoliders[i][j] = new ImageView(points[i][j].getContext());
+                blackSoliders[i][j].setImageResource(R.drawable.black_solider);
+                blackSoliders[i][j].setVisibility(View.GONE);
+
+                whiteKings[i][j] = new ImageView(points[i][j].getContext());
+                whiteKings[i][j].setVisibility(View.GONE);
+
+                blackKings[i][j] = new ImageView(points[i][j].getContext());
+                blackKings[i][j].setVisibility(View.GONE);
             }
         }
     }
@@ -164,17 +180,11 @@ public class MainActivity extends AppCompatActivity {
         }
         for(int i = 0; i < BOARD_HIGH; i++){
             for(int j = 0; j < BOARD_WIDTH; j++) {
-                points[i][j] = new PointOnBoard(vGameBoard.getContext());
-                points[i][j].setPoint(new Point(j, i));
-                points[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(50), dpToPx(50));
-                points[i][j].setLayoutParams(lp);
-                if((i+j)%2 == 0) {
+                if((i + j) % 2 == 0) {
                     points[i][j].setBackgroundColor(Color.BLACK);
                 }else{
                     points[i][j].setBackgroundColor(Color.WHITE);
                 }
-                initDropListener(points[i][j]);
                 vGameBoard.addView( points[i][j]);
             }
         }
@@ -182,6 +192,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initDropListener(PointOnBoard point) {
+        for (int i = 0; i < BOARD_HIGH; i++) {
+            for (int j = 0; j < BOARD_WIDTH; j++) {
+                whiteSoliders[i][j].setOnDragListener(new DropListener());
+                blackSoliders[i][j].setOnDragListener(new DropListener());
+                whiteKings[i][j].setOnDragListener(new DropListener());
+                blackKings[i][j].setOnDragListener(new DropListener());
+            }
+        }
+
         point.setOnDragListener(new View.OnDragListener() {
             @Override
             public boolean onDrag(View v, DragEvent event) {
