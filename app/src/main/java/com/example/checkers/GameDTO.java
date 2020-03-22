@@ -2,13 +2,18 @@ package com.example.checkers;
 
 import android.graphics.Point;
 
+import java.util.Arrays;
+
 public class GameDTO {
 
-    PlayerEnum currentPlayer;
-    boolean status;
-    boolean gameOwner;
-    StoneEnum gameBoard[][];
-    StoneEnum oldGameBoard[][];
+    private static final int BOARD_HIGH = 8;
+    private static final int BOARD_WIDTH = 8;
+
+    private PlayerEnum currentPlayer;
+    private boolean status;
+    private boolean gameOwner;
+    private StoneEnum gameBoard[][];
+    private StoneEnum oldGameBoard[][];
 
     public GameDTO(){
         currentPlayer = PlayerEnum.WHITE;
@@ -24,6 +29,7 @@ public class GameDTO {
                 {StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER, null},
                 {null, StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER, null, StoneEnum.BLACK_SOLIDER}
         };
+        oldGameBoard = copy(gameBoard);
 
     }
 
@@ -132,5 +138,31 @@ public class GameDTO {
         int x = (from.x + to.x)/2;
         int y = (from.y + to.y)/2;
         return new Point(x, y);
+    }
+
+    private StoneEnum[][] copy(StoneEnum[][] original) {
+        StoneEnum[][] res = new StoneEnum[BOARD_HIGH][BOARD_WIDTH];
+        for(int i = 0; i < original.length; i++) {
+            for (int j = 0; j < original[i].length; j++) {
+                res[i][j] = original[i][j];
+            }
+        }
+        return res;
+    }
+
+    public void refreshGameBoard() {
+        gameBoard = copy(oldGameBoard);
+    }
+
+    public void updateOldGameBoard() {
+        oldGameBoard = copy(gameBoard);
+    }
+
+    public void switchPlayer() {
+        if(currentPlayer == PlayerEnum.BLACK){
+            currentPlayer = PlayerEnum.WHITE;
+        } else{
+            currentPlayer = PlayerEnum.BLACK;
+        }
     }
 }

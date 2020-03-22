@@ -5,6 +5,7 @@ import android.graphics.Point;
 import android.widget.FrameLayout;
 
 public class PointOnBoard extends FrameLayout {
+
     private Point point;
 
     public PointOnBoard(Context context) {

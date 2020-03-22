@@ -15,24 +15,39 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
+
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int BOARD_HIGH = 8;
+    private static final int BOARD_WIDTH = 8;
+
     private int pointWidth;
     private int stonePadding;
     private Button endButton;
+    private Button refreshButton;
+    private TextView vPlayerName;
     private FrameLayout vBoard;
     private GridLayout vGameBoard;
     private GameDTO gameDTO;
     private PointOnBoard points[][];
+    private ImageView whiteSoliders[][];
+    private ImageView blackSoliders[][];
+    private ImageView whiteKings[][];
+    private ImageView blackKings[][];
     private ImageView currentStone;
     private PointOnBoard from;
-    private  PointOnBoard to;
-    private  Point eatPoint;
+    private PointOnBoard to;
+    private Point eatPoint;
+
 
 
     public MainActivity() {
+        pointWidth = 50; // in dp
+        stonePadding = 10; // in dp
     }
 
     @Override
@@ -40,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        refreshButton = findViewById(R.id.refresh);
         endButton = findViewById(R.id.end);
+        vPlayerName =  findViewById(R.id.playerName);
         vBoard = findViewById(R.id.board);
         vGameBoard = findViewById(R.id.gameBoard);
-        pointWidth = 50; // in dp
-        stonePadding = 10; // in dp
 
         initButtons();
         initGame();
@@ -56,17 +71,32 @@ public class MainActivity extends AppCompatActivity {
         endButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                printGameBoard();
+                gameDTO.updateOldGameBoard();
+                gameDTO.switchPlayer();
+                vPlayerName.setText(gameDTO.getCurrentPlayer().toString());
+            }
+        });
+
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                gameDTO.refreshGameBoard();
+                printStones();
             }
         });
     }
 
     private void printStones() {
-        for(int i = 0; i < 8; i++){
-            for(int j = 0; j < 8; j++) {
-                ImageView solider = new ImageView(points[i][j].getContext());
-                StoneEnum currentPoint = gameDTO.getGameBoard()[i][j];
+        StoneEnum[][] board = gameDTO.getOldGameBoard();
+        for(int i = 0; i < BOARD_HIGH; i++){
+            for(int j = 0; j < BOARD_WIDTH; j++) {
+                StoneEnum currentPoint = board[i][j];
+                if(currentPoint == null){
+                    points[i][j].removeAllViews();
+                    continue;
+                }
                 if (currentPoint != null) {
+                    ImageView solider = new ImageView(points[i][j].getContext());
                     switch (currentPoint) {
                         case BLACK_SOLIDER:
                             solider.setImageResource(R.drawable.black_solider);
@@ -107,15 +137,33 @@ public class MainActivity extends AppCompatActivity {
 
     private void initGame() {
         gameDTO = new GameDTO();
-        points = new PointOnBoard[8][8];
+        points = new PointOnBoard[BOARD_HIGH][BOARD_WIDTH];
+        whiteSoliders = new ImageView[BOARD_HIGH][BOARD_WIDTH];
+        blackSoliders = new ImageView[BOARD_HIGH][BOARD_WIDTH];
+        whiteKings = new ImageView[BOARD_HIGH][BOARD_WIDTH];
+        blackKings = new ImageView[BOARD_HIGH][BOARD_WIDTH];
+
+        for(int i = 0; i < BOARD_HIGH; i++){
+            for(int j = 0; j < BOARD_WIDTH; j++) {
+                points[i][j] = new PointOnBoard(vGameBoard.getContext());
+                points[i][j].setPoint(new Point(j, i));
+                points[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
+                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(50), dpToPx(50));
+                points[i][j].setLayoutParams(lp);
+
+                whiteSoliders[i][j] = new ImageView(points[i][j].getContext());
+                whiteSoliders[i][j].setImageResource(R.drawable.white_solider);
+            }
+        }
     }
 
     private void printGameBoard() {
+        vPlayerName.setText(gameDTO.getCurrentPlayer().toString());
         if(!gameDTO.isGameOwner()){
             vBoard.setRotation(180);
         }
-        for(int i = 0; i < 8; i++){
-            for(int j = 0; j < 8; j++) {
+        for(int i = 0; i < BOARD_HIGH; i++){
+            for(int j = 0; j < BOARD_WIDTH; j++) {
                 points[i][j] = new PointOnBoard(vGameBoard.getContext());
                 points[i][j].setPoint(new Point(j, i));
                 points[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
@@ -151,20 +199,24 @@ public class MainActivity extends AppCompatActivity {
                         if(gameDTO.isMove(from.getPoint(), to.getPoint())){
                             gameDTO.move(from.getPoint(), to.getPoint());
                             to.addView(currentStone);
-                        } else if(gameDTO.isEat(from.getPoint(), to.getPoint())){
+                            break;
+                        }
+                        if(gameDTO.isEat(from.getPoint(), to.getPoint())){
                             gameDTO.eat(from.getPoint(), to.getPoint());
                             eatPoint = gameDTO.getEatPoint(from.getPoint(), to.getPoint());
                             points[eatPoint.y][eatPoint.x].removeAllViews();
                             to.addView(currentStone);
-
-                        } else{
-                            from.addView(currentStone);
+                            break;
                         }
+                        from.addView(currentStone);
                         break;
-                         case DragEvent.ACTION_DRAG_ENDED:
-                             currentStone = null;
-                             from = null;
-                             to = null;
+                    case DragEvent.ACTION_DRAG_ENDED:
+                        if(gameDTO.isMove(from.getPoint(), to.getPoint())){
+
+                        }
+                        currentStone = null;
+                        from = null;
+                        to = null;
                     default:
                         break;
                 }
