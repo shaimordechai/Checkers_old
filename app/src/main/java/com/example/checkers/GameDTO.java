@@ -67,7 +67,7 @@ public class GameDTO {
         this.gameOwner = gameOwner;
     }
 
-    public boolean canMove(Point from, Point to) {
+    public boolean isMove(Point from, Point to) {
         if(gameBoard[to.y][to.x] != null){
             return false;
         }
@@ -97,7 +97,7 @@ public class GameDTO {
 
     }
 
-    public boolean canEat(Point from, Point to) {
+    public boolean isEat(Point from, Point to) {
         if(gameBoard[to.y][to.x] != null){
             return false;
         }
@@ -122,6 +122,7 @@ public class GameDTO {
     }
 
     public void eat(Point from, Point to) {
+        move(from, to);
         int x = (from.x + to.x)/2;
         int y = (from.y + to.y)/2;
         gameBoard[y][x] = null;

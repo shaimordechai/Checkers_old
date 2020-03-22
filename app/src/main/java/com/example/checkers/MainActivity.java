@@ -139,11 +139,6 @@ public class MainActivity extends AppCompatActivity {
             public boolean onDrag(View v, DragEvent event) {
                 currentStone = (ImageView) event.getLocalState();
                 switch (event.getAction()){
-                    case DragEvent.ACTION_DRAG_STARTED:
-                    case DragEvent.ACTION_DRAG_ENTERED:
-                    case DragEvent.ACTION_DRAG_LOCATION:
-
-                        break;
                     case DragEvent.ACTION_DRAG_EXITED:
                         PointOnBoard temp = (PointOnBoard) currentStone.getParent();
                         if(temp != null){
@@ -153,10 +148,10 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case DragEvent.ACTION_DROP:
                         to = (PointOnBoard) v;
-                        if(gameDTO.canMove(from.getPoint(), to.getPoint())){
+                        if(gameDTO.isMove(from.getPoint(), to.getPoint())){
                             gameDTO.move(from.getPoint(), to.getPoint());
                             to.addView(currentStone);
-                        } else if(gameDTO.canEat(from.getPoint(), to.getPoint())){
+                        } else if(gameDTO.isEat(from.getPoint(), to.getPoint())){
                             gameDTO.eat(from.getPoint(), to.getPoint());
                             eatPoint = gameDTO.getEatPoint(from.getPoint(), to.getPoint());
                             points[eatPoint.y][eatPoint.x].removeAllViews();
