@@ -6,11 +6,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.ClipData;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.DragEvent;
 import android.view.View;
-import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
@@ -25,7 +25,12 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout vBoard;
     private GridLayout vGameBoard;
     private GameDTO gameDTO;
-    private FrameLayout point[][];
+    private PointOnBoard points[][];
+    private ImageView currentStone;
+    private PointOnBoard from;
+    private  PointOnBoard to;
+    private  Point eatPoint;
+
 
     public MainActivity() {
     }
@@ -45,61 +50,21 @@ public class MainActivity extends AppCompatActivity {
         initGame();
         printGameBoard();
         printStones();
-
-       /*for(int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                final FrameLayout point = new FrameLayout(vGameBoard.getContext());
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(pointWidth), dpToPx(pointWidth));
-                point.setLayoutParams(lp);
-
-
-                if ((i + j) % 2 == 0) {
-                    point.setBackgroundColor(Color.WHITE);
-                    final ImageView solider = new ImageView(point.getContext());
-                    point.addView(solider);
-                    point.setPadding(dpToPx(5), dpToPx(5), dpToPx(5), dpToPx(5));
-                    solider.setImageResource(R.drawable.black_solider);
-                    solider.setOnLongClickListener(new View.OnLongClickListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.N)
-                        @Override
-                        public boolean onLongClick(View v) {
-                            ClipData data = ClipData.newPlainText("", "");
-                            View.DragShadowBuilder shadow = new View.DragShadowBuilder(solider);
-                            v.startDragAndDrop(data, shadow, null, 0);
-                            return false;
-                        }
-                    });
-                } else {
-                    point.setBackgroundColor(Color.BLACK);
-                }
-
-                if (i == 0 && j == 0) {
-                    point.setOnDragListener(new View.OnDragListener() {
-                        @Override
-                        public boolean onDrag(View v, DragEvent event) {
-                            switch (event.getAction()) {
-                                case DragEvent.ACTION_DRAG_STARTED:
-                                    point.setBackgroundColor(Color.BLUE);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            return false;
-                        }
-                    });
-                }
-                vGameBoard.addView(point);
-            }
-        }*/
     }
 
     private void initButtons() {
+        endButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                printGameBoard();
+            }
+        });
     }
 
     private void printStones() {
         for(int i = 0; i < 8; i++){
             for(int j = 0; j < 8; j++) {
-                ImageView solider = new ImageView(point[i][j].getContext());
+                ImageView solider = new ImageView(points[i][j].getContext());
                 StoneEnum currentPoint = gameDTO.getGameBoard()[i][j];
                 if (currentPoint != null) {
                     switch (currentPoint) {
@@ -108,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case WHITE_SOLIDER:
                             solider.setImageResource(R.drawable.white_solider);
+                            initDragListener(solider);
                             break;
                         case BLACK_KING:
 
@@ -118,8 +84,7 @@ public class MainActivity extends AppCompatActivity {
                         default:
                             break;
                     }
-                    initDragListener(solider);
-                    point[i][j].addView(solider);
+                    points[i][j].addView(solider);
                 }
             }
         }
@@ -142,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initGame() {
         gameDTO = new GameDTO();
-        point = new FrameLayout[8][8];
+        points = new PointOnBoard[8][8];
     }
 
     private void printGameBoard() {
@@ -151,43 +116,60 @@ public class MainActivity extends AppCompatActivity {
         }
         for(int i = 0; i < 8; i++){
             for(int j = 0; j < 8; j++) {
-                point[i][j] = new FrameLayout(vGameBoard.getContext());
-                point[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
+                points[i][j] = new PointOnBoard(vGameBoard.getContext());
+                points[i][j].setPoint(new Point(j, i));
+                points[i][j].setPadding(dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding), dpToPx(stonePadding));
                 FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dpToPx(50), dpToPx(50));
-                point[i][j].setLayoutParams(lp);
+                points[i][j].setLayoutParams(lp);
                 if((i+j)%2 == 0) {
-                    point[i][j].setBackgroundColor(Color.BLACK);
+                    points[i][j].setBackgroundColor(Color.BLACK);
                 }else{
-                    point[i][j].setBackgroundColor(Color.WHITE);
+                    points[i][j].setBackgroundColor(Color.WHITE);
                 }
-                initDropListener(point[i][j]);
-                vGameBoard.addView( point[i][j]);
+                initDropListener(points[i][j]);
+                vGameBoard.addView( points[i][j]);
             }
         }
 
     }
 
-    private void initDropListener(FrameLayout frameLayout) {
-        frameLayout.setOnDragListener(new View.OnDragListener() {
+    private void initDropListener(PointOnBoard point) {
+        point.setOnDragListener(new View.OnDragListener() {
             @Override
             public boolean onDrag(View v, DragEvent event) {
+                currentStone = (ImageView) event.getLocalState();
                 switch (event.getAction()){
                     case DragEvent.ACTION_DRAG_STARTED:
                     case DragEvent.ACTION_DRAG_ENTERED:
                     case DragEvent.ACTION_DRAG_LOCATION:
-                    case DragEvent.ACTION_DRAG_ENDED:
+
                         break;
                     case DragEvent.ACTION_DRAG_EXITED:
-                        ImageView stone1 = (ImageView) event.getLocalState();
-                        FrameLayout from = (FrameLayout) stone1.getParent();
-                        if(from != null){
-                            from.removeView(stone1);
+                        PointOnBoard temp = (PointOnBoard) currentStone.getParent();
+                        if(temp != null){
+                            from = temp;
+                            from.removeAllViews();
                         }
                         break;
                     case DragEvent.ACTION_DROP:
-                        ImageView stone2 = (ImageView) event.getLocalState();
-                        FrameLayout to = (FrameLayout) v;
-                        to.addView(stone2);
+                        to = (PointOnBoard) v;
+                        if(gameDTO.canMove(from.getPoint(), to.getPoint())){
+                            gameDTO.move(from.getPoint(), to.getPoint());
+                            to.addView(currentStone);
+                        } else if(gameDTO.canEat(from.getPoint(), to.getPoint())){
+                            gameDTO.eat(from.getPoint(), to.getPoint());
+                            eatPoint = gameDTO.getEatPoint(from.getPoint(), to.getPoint());
+                            points[eatPoint.y][eatPoint.x].removeAllViews();
+                            to.addView(currentStone);
+
+                        } else{
+                            from.addView(currentStone);
+                        }
+                        break;
+                         case DragEvent.ACTION_DRAG_ENDED:
+                             currentStone = null;
+                             from = null;
+                             to = null;
                     default:
                         break;
                 }
